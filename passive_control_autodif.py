@@ -26,7 +26,7 @@ if __name__=='__main__':
     passive_control = PassiveControlAutodif(model)
     
     # Example usage
-    Kbeta = torch.tensor(0.0, requires_grad=True)
+    Kbeta = torch.tensor(0.4, requires_grad=True)
     Dbeta = torch.tensor(0.0, requires_grad=True)
     xh = torch.tensor(0.1125, requires_grad=True)
     
@@ -36,14 +36,20 @@ if __name__=='__main__':
     traj = passive_control.objective_function()
     print(traj)  # This will print the trajectory computed by rk4
     fig,ax=plt.subplots(1,1,tight_layout=True)
-    ax.plot([t.item() for t, y in traj], [y[2].item() for t, y in traj], label='Trajectory',color='blue')
+    ax.plot([t.item() for t, y in traj], [y[3].item() for t, y in traj], label='Trajectory',color='blue')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('Height (m)')
     ax.set_title('Trajectory of Height over Time')
     fig.savefig('h_trajectory.png')
     fig,ax=plt.subplots(1,1,tight_layout=True)
-    ax.plot([t.item() for t, y in traj], [y[3].item() for t, y in traj], label='alpha',color='red')
+    ax.plot([t.item() for t, y in traj], [y[4].item() for t, y in traj], label='alpha',color='red')
     ax.set_xlabel('Time (s)')
     ax.set_ylabel('alpha (rad)')
     ax.set_title('Trajectory of alpha over Time')
     fig.savefig('alpha_trajectory.png')
+    fig,ax=plt.subplots(1,1,tight_layout=True)
+    ax.plot([t.item() for t, y in traj], [y[5].item() for t, y in traj], label='Trajectory',color='green')
+    ax.set_xlabel('Time (s)')
+    ax.set_ylabel('Height (m)')
+    ax.set_title('Trajectory of beta over Time')
+    fig.savefig('beta_trajectory.png')

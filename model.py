@@ -76,15 +76,15 @@ class Model:
                           [s, Ialpha, Ialphabeta],
                           [sbeta, Ialphabeta, Ibeta]])/self.span
                 
-        A = torch.tensor([[self.m, s],
-                    [s, Ialpha]])/self.span
+        # A = torch.tensor([[self.m, s],
+        #             [s, Ialpha]])/self.span
         return A
     def make_stiffness_matrix(self):
         E=torch.tensor([[self.kh,0,0],
                    [0,self.kalpha,0],
                    [0,0,self.kbeta]])/self.span
-        E=torch.tensor([[self.kh,0],
-                   [0,self.kalpha]])/self.span
+        # E=torch.tensor([[self.kh,0],
+        #            [0,self.kalpha]])/self.span
         return E    
     def make_T_variables(self):
         self.T1=-1/3*torch.sqrt(1-self.ch**2)*(2+self.ch**2)+self.ch*self.nu
@@ -106,8 +106,8 @@ class Model:
         B=self.b**2*torch.tensor([[torch.pi,-torch.pi*self.a*self.b,-self.T1*self.b],
                    [-torch.pi*self.a*self.b,torch.pi*self.b**2*(1/8+self.a**2),-(self.T7+(self.ch-self.a)*self.T1)*self.b**2],
                    [-self.T1*self.b,2*self.T13*self.b**2,-self.T3*self.b**2/torch.pi]])
-        B=self.b**2*torch.tensor([[torch.pi,-torch.pi*self.a*self.b],
-                   [-torch.pi*self.a*self.b,torch.pi*self.b**2*(1/8+self.a**2)]])
+        # B=self.b**2*torch.tensor([[torch.pi,-torch.pi*self.a*self.b],
+        #            [-torch.pi*self.a*self.b,torch.pi*self.b**2*(1/8+self.a**2)]])
         return B
             
     def make_aerodynamic_damping_matrix(self):
@@ -119,11 +119,10 @@ class Model:
                    [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a),-self.b**3*(self.a+1/2)*self.T11],
                    [self.b**2*self.T12,self.b**3*self.T12*(1/2-self.a),self.b**3*self.T12*self.T11/2/torch.pi]])##Waring /(2pi) ou /2*pi
 
-        D1=self.b**2*torch.tensor([[0,torch.pi],
-                   [0,torch.pi*(1/2-self.a)*self.b,]])
-        D2=torch.tensor([[2*torch.pi*self.b,2*torch.pi*self.b**2*(1/2-self.a)],
-                   [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a)]])
-        print(D1,D2,self.rho,self.U)
+        # D1=self.b**2*torch.tensor([[0,torch.pi],
+        #            [0,torch.pi*(1/2-self.a)*self.b,]])
+        # D2=torch.tensor([[2*torch.pi*self.b,2*torch.pi*self.b**2*(1/2-self.a)],
+        #            [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a)]])
         
 
         return D1+phi0*D2
@@ -142,12 +141,12 @@ class Model:
                    [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a),-self.b**3*(self.a+1/2)*self.T11],
                    [self.b**2*self.T12,self.b**3*self.T12*(1/2-self.a),self.b**3*self.T12*self.T11/2/torch.pi]])##Waring /(2pi) ou /2*pi
 
-        F1=self.b**2*torch.tensor([[0,0],
-                   [0,0]])
-        F2=torch.tensor([[0,2*torch.pi*self.b],
-                   [0,-2*torch.pi*self.b**2*(self.a+1/2)]])
-        F3=torch.tensor([[2*torch.pi*self.b,2*torch.pi*self.b**2*(1/2-self.a)],
-                   [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a)]])
+        # F1=self.b**2*torch.tensor([[0,0],
+        #            [0,0]])
+        # F2=torch.tensor([[0,2*torch.pi*self.b],
+        #            [0,-2*torch.pi*self.b**2*(self.a+1/2)]])
+        # F3=torch.tensor([[2*torch.pi*self.b,2*torch.pi*self.b**2*(1/2-self.a)],
+        #            [-2*torch.pi*self.b**2*(self.a+1/2),-2*torch.pi*self.b**3*(self.a+1/2)*(1/2-self.a)]])
         return F1+phi0*F2+epsilon*F3
     def make_aerodynamic_influence_matrices(self):
         W0=torch.tensor([[-self.psi1*(self.eps1/self.b)**2],
@@ -156,32 +155,32 @@ class Model:
                    [self.psi2*self.eps2*(1-self.eps2*(1/2-self.a))/self.b],
                    [self.psi1*self.eps1*(self.T10-self.eps1*self.T11/2)/torch.pi/self.b],##Warning /(pib) ou /pi+b
                    [self.psi2*self.eps2*(self.T10-self.eps2*self.T11/2)/torch.pi/self.b]])
-        W0=torch.tensor([[-self.psi1*(self.eps1/self.b)**2],
-                   [-self.psi2*(self.eps2/self.b)**2],
-                   [self.psi1*self.eps1*(1-self.eps1*(1/2-self.a))/self.b],
-                   [self.psi2*self.eps2*(1-self.eps2*(1/2-self.a))/self.b]])
+        # W0=torch.tensor([[-self.psi1*(self.eps1/self.b)**2],
+        #            [-self.psi2*(self.eps2/self.b)**2],
+        #            [self.psi1*self.eps1*(1-self.eps1*(1/2-self.a))/self.b],
+        #            [self.psi2*self.eps2*(1-self.eps2*(1/2-self.a))/self.b]])
         W=torch.hstack((2*torch.pi*self.b*W0,-2*torch.pi*self.b**2*(self.a+1/2)*W0,self.b**2*self.T12*W0)).T
-        W=torch.hstack((2*torch.pi*self.b*W0,-2*torch.pi*self.b**2*(self.a+1/2)*W0)).T
+        # W=torch.hstack((2*torch.pi*self.b*W0,-2*torch.pi*self.b**2*(self.a+1/2)*W0)).T
         W1=torch.tensor([[1,0,0],
                      [1,0,0],
                      [0,1,0],
                      [0,1,0],
                      [0,0,1],
                      [0,0,1]])
-        W1=torch.tensor([[1,0],
-                     [1,0],
-                     [0,1],
-                     [0,1]])
+        # W1=torch.tensor([[1,0],
+        #              [1,0],
+        #              [0,1],
+        #              [0,1]])
         W2=torch.tensor([[-self.eps1/self.b,0,0,0,0,0],
                      [0,-self.eps2/self.b,0,0,0,0],
                      [0,0,-self.eps1/self.b,0,0,0],
                      [0,0,0,-self.eps2/self.b,0,0],
                      [0,0,0,0,-self.eps1/self.b,0],
                      [0,0,0,0,0,-self.eps2/self.b]])
-        W2=torch.tensor([[-self.eps1/self.b,0,0,0],
-                     [0,-self.eps2/self.b,0,0,],
-                     [0,0,-self.eps1/self.b,0],
-                     [0,0,0,-self.eps2/self.b]])
+        # W2=torch.tensor([[-self.eps1/self.b,0,0,0],
+        #              [0,-self.eps2/self.b,0,0,],
+        #              [0,0,-self.eps1/self.b,0],
+        #              [0,0,0,-self.eps2/self.b]])
         return W,W1,W2
 
     def make_first_order_matrix(self):
@@ -198,15 +197,15 @@ class Model:
         W,W1,W2=self.make_aerodynamic_influence_matrices()
         Intermediate=-self.rho*self.U**3*torch.matmul(M_inv,W)
 
-        # l1=torch.hstack((-torch.matmul(M_inv,C+self.rho*self.U*D),-torch.matmul(M_inv,E+self.rho*self.U**2*F),Intermediate[:,:3],Intermediate[:,3:]))
-        # l2=torch.hstack((torch.eye(3),torch.zeros((3,3)),torch.zeros((3,3)),torch.zeros((3,3))))
-        # l3=torch.hstack((torch.zeros((3,3)),W1[:3,:],self.U*W2[:3,:3],self.U*W2[:3,3:]))
-        # l4=torch.hstack((torch.zeros((3,3)),W1[3:,:],self.U*W2[3:,:3],self.U*W2[3:,3:]))
+        l1=torch.hstack((-torch.matmul(M_inv,C+self.rho*self.U*D),-torch.matmul(M_inv,E+self.rho*self.U**2*F),Intermediate[:,:3],Intermediate[:,3:]))
+        l2=torch.hstack((torch.eye(3),torch.zeros((3,3)),torch.zeros((3,3)),torch.zeros((3,3))))
+        l3=torch.hstack((torch.zeros((3,3)),W1[:3,:],self.U*W2[:3,:3],self.U*W2[:3,3:]))
+        l4=torch.hstack((torch.zeros((3,3)),W1[3:,:],self.U*W2[3:,:3],self.U*W2[3:,3:]))
         
-        l1=torch.hstack((-torch.matmul(M_inv,C+self.rho*self.U*D),-torch.matmul(M_inv,E+self.rho*self.U**2*F),Intermediate[:,:2],Intermediate[:,2:]))
-        l2=torch.hstack((torch.eye(2),torch.zeros((2,2)),torch.zeros((2,2)),torch.zeros((2,2))))
-        l3=torch.hstack((torch.zeros((2,2)),W1[:2,:],self.U*W2[:2,:2],self.U*W2[:2,2:]))
-        l4=torch.hstack((torch.zeros((2,2)),W1[2:,:],self.U*W2[2:,:2],self.U*W2[2:,2:]))
+        # l1=torch.hstack((-torch.matmul(M_inv,C+self.rho*self.U*D),-torch.matmul(M_inv,E+self.rho*self.U**2*F),Intermediate[:,:2],Intermediate[:,2:]))
+        # l2=torch.hstack((torch.eye(2),torch.zeros((2,2)),torch.zeros((2,2)),torch.zeros((2,2))))
+        # l3=torch.hstack((torch.zeros((2,2)),W1[:2,:],self.U*W2[:2,:2],self.U*W2[:2,2:]))
+        # l4=torch.hstack((torch.zeros((2,2)),W1[2:,:],self.U*W2[2:,:2],self.U*W2[2:,2:]))
         Q=torch.vstack((l1,l2,l3,l4))
         self.Q=Q
 
@@ -229,7 +228,7 @@ class Model:
             raise ValueError('Initial condition type not recognized')
         
         X0 = torch.tensor([0,0,0,h0,alpha0,beta0,0,0,0,0,0,0])
-        X0 = torch.tensor([0,0,h0,alpha0,0,0,0,0])
+        #X0 = torch.tensor([0,0,h0,alpha0,0,0,0,0])
         # self.X_values=torch.te
         # nsor([X0])
         # self.t_values=[0]
