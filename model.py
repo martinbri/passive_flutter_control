@@ -32,7 +32,7 @@ class Model:
             self.kh=2131.8346
             self.kalpha=198.9712
             self.rho=1.225
-            self.damph=1.0
+            self.damph=0.0
             self.dampalpha=0
             
             self.U=41.
@@ -47,8 +47,11 @@ class Model:
             self.h0=[0.01,0.01]
             self.alpha0=[0.00,0.00]
             self.beta0=[0.00,0.00]
-        
-        
+        self.salpha=self.m*(self.c/2-self.xf)
+        self.Ialpha=self.m/3*(self.c**2-3*self.c*self.xf+3*self.xf**2)
+        self.sbeta=self.m*(self.c-self.xh)**2/2/self.c
+        self.Ibeta=self.m*(self.c-self.xh)**3/3/self.c
+        self.Ialphabeta=self.Ibeta+(self.xh-self.xf)*self.sbeta
         self.t_actuation=1/self.f_actuation
         self.b=self.c/2
         self.a=self.xf/self.b-1
@@ -244,21 +247,21 @@ class Model:
         Returns:
             fun: dynamical function
         """
-        # Nl_vector=torch.zeros(3)
+        Nl_vector=torch.zeros(3)
         # print('Nl_vector',Nl_vector[2], 'X[5]', X[5])
-        # Nl_vector[2]= self.kbeta*X[5]**3
+        Nl_vector[2]= self.kbeta/self.span*X[5]**3
         
-        # A=self.make_mass_matrix()
-        # B=self.make_aero_mass_matrix()
-        # M=A+self.rho*B
-        # M_inv=torch.linalg.inv(M)
-        # Nl_vector=torch.matmul(-M_inv, Nl_vector)
+        A=self.make_mass_matrix()
+        B=self.make_aero_mass_matrix()
+        M=A+self.rho*B
+        M_inv=torch.linalg.inv(M)
+        Nl_vector=torch.matmul(-M_inv, Nl_vector)
         
-        # Nl_term=torch.zeros(12)
-        # Nl_term[:3]=Nl_vector
+        Nl_term=torch.zeros(12)
+        Nl_term[:3]=Nl_vector
         
 
-        return torch.matmul(self.Q, X)#+ Nl_term
+        return torch.matmul(self.Q, X)+ Nl_term
             
         
    

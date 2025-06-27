@@ -7,7 +7,7 @@ xh: 0.1125 # distance from the leading edge to the hinge
 kh: 200 #  stiffness
 kalpha: 4 #  torsional stiffness wing
 rho: 1.225 # air density
-U: 5 # flow velocity
+U: 12 # flow velocity
 t_max: 10.0 # time span
 span: 0.45 # span of the wing
 f_actuation: 50. # actuation frequency

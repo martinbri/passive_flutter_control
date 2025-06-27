@@ -31,7 +31,7 @@ class Model:
             self.damph=0
             self.dampalpha=0
             self.dampbeta=0
-            self.U=5.
+            self.U=12.
             self.span=0.45
 
         ###Initialize time integration variables
