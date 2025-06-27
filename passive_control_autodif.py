@@ -5,7 +5,8 @@ from rk4 import rk4
 from model import Model
 import matplotlib.pyplot as plt
 import numpy as np
-from torch.optim import Adam
+import multiprocessing
+from torch.optim import Adam,SGD,RMSprop
 from dmd import dmd_torch
 # from torchviz import make_dot   
 
@@ -28,17 +29,16 @@ class PassiveControlAutodif(nn.Module):
         W[0] = 0.5
         W[-1] = 0.5
         return W
-    def objective_function(self):
+    def objective_function(self,targeted_frequency :float =None):
         traj = rk4(self.model.ODE, self.model.t_span[0], self.X0, self.model.dt_computation, int((self.model.t_span[1] - self.model.t_span[0]) / self.model.dt_computation))
         
-        print(traj[0])
         h= torch.stack([y[3] for t, y in traj])  # Extract height from trajectory
         alpha = torch.stack([y[4] for t, y in traj])  # Extract alpha from trajectory
         beta = torch.stack([y[5] for t, y in traj])  # Extract beta from trajectory
         h_dot = torch.stack([y[0] for t, y in traj])  # Extract h_dot from trajectory
         alpha_dot = torch.stack([y[1] for t, y in traj])  # Extract alpha_dot from trajectory
         beta_dot = torch.stack([y[2] for t, y in traj])  # Extract beta_dot from trajectory
-        print(f"Height: {h}, Alpha: {alpha}, Beta: {beta}")
+        # print(f"Height: {h}, Alpha: {alpha}, Beta: {beta}")
         energy_integrand = self.compute_energy(
             h=h,
             alpha=alpha,
@@ -48,18 +48,18 @@ class PassiveControlAutodif(nn.Module):
             beta_dot=beta_dot   # Extract beta_dot from trajectory
         )
         ff_transform=torch.fft.rfft(h,n=len(h))
-        print(f"FFT Transform: {ff_transform}")
-        h_reconstructed = torch.fft.irfft(ff_transform, n=len(h)).real
+        # print(f"FFT Transform: {ff_transform}")
+        #h_reconstructed = torch.fft.irfft(ff_transform, n=len(h)).real
         
         amplitudes= torch.abs(ff_transform)/len(h)*2
         fe=1/model.dt_computation
-        frequencies = fe/2*torch.linspace(0,1,len(ff_transform))
+        frequencies  = torch.fft.rfftfreq(len(h), d=model.dt_computation)
+        mask = (frequencies >= targeted_frequency/2) & (frequencies <= targeted_frequency*2)
         
+        frequency_overlap=torch.trapz(amplitudes[mask], frequencies[mask])/ torch.trapz(amplitudes, frequencies)
         
-        max_amplitude = torch.max(amplitudes)
-        max_frequency = frequencies[torch.argmax(amplitudes)]
-        print(f"Max Amplitude: {max_amplitude}, Max Frequency: {max_frequency}")
-        print(f"natural frequency {np.sqrt(model.kh/model.m)/2/np.pi}")
+        # print(f"Max Amplitude: {max_amplitude}, Max Frequency: {max_frequency}")
+        # print(f"natural frequency {np.sqrt(model.kh/model.m)/2/np.pi}")
         
         
         # plt.figure(figsize=(4, 3),tight_layout=True)
@@ -73,8 +73,8 @@ class PassiveControlAutodif(nn.Module):
         # print(max(h),min(h))
         
         
-        print(f"FFT {ff_transform}")
-        print(f"size FFT {ff_transform.shape}")
+        # print(f"FFT {ff_transform}")
+        # print(f"size FFT {ff_transform.shape}")
         # plt.figure(figsize=(4, 3),tight_layout=True)
         # plt.plot(h.detach().numpy(), label='Original h', color='blue')
         # plt.plot(h_reconstructed.detach().numpy(), label='Reconstructed h', color='orange', linestyle='--')
@@ -88,31 +88,79 @@ class PassiveControlAutodif(nn.Module):
         if False:
             W= self.make_trapz_integrator(len(energy_integrand))
             energy=torch.matmul(W.reshape(1,-1), energy_integrand.reshape(-1,1)).squeeze()* self.model.dt_computation 
-        return max_amplitude,traj
+        return frequency_overlap,traj 
 
 if __name__=='__main__':
     config_env='config_env.yaml'
     model = Model(config_env)
     passive_control = PassiveControlAutodif(model)
     
-    # Example usage
-    Kbeta = torch.tensor(0.1, requires_grad=True)
-    Dbeta = torch.tensor(0.0, requires_grad=False)
-    xh = torch.tensor(0.5*0.15, requires_grad=True)
+
     
     
     
-    passive_control.update_matrices_with_control_parameters(Kbeta, Dbeta, xh)
+    targeted_frequency = np.sqrt(model.kh/model.m)/2/np.pi*0.5  # Targeted frequency in Hz
     
-    # Compute the objective function
-    max_amplitude,traj = passive_control.objective_function()
+    K_beta_min=0.01
+    K_meta_max=model.kalpha
     
-    loss = max_amplitude
-    print(f"Computed energy: {loss.item()}")
-    # Perform backpropagation
-    loss.backward()
-    print(f"Gradient Kbeta: {Kbeta.grad.item()}")
-    print(f"Gradient xh: {xh.grad.item()}")
+    xh_min=model.xf
+    xh_max=model.c
+    
+    # Generate a list of parameter combinations for Kbeta and xh
+    Kbeta_values = Kbeta_values = K_beta_min + (K_meta_max - K_beta_min) * torch.rand(10)
+    xh_values =  xh_min + (xh_max - xh_max) * torch.rand(10)
+    X_ini = [(Kbeta.item(), xh.item()) for Kbeta in Kbeta_values for xh in xh_values]
+    print(len(X_ini))
+    
+    data_save=np.zeros((len(X_ini), 3,1000))  # Initialize data_save to store results
+    j=0
+    if True:
+        
+        for Kbeta, xh in X_ini:
+            print(f"Initial Kbeta: {Kbeta}, xh: {xh}")
+            
+            
+            
+            
+            Kbeta = torch.tensor(Kbeta, requires_grad=True)
+            Dbeta = torch.tensor(Kbeta/1000, requires_grad=False)
+            xh = torch.tensor(xh, requires_grad=True)
+            optimizer = RMSprop([Kbeta, xh], lr=0.01)
+            for epoch in range(10000):
+                optimizer.zero_grad()
+        
+    
+    
+    
+                passive_control.update_matrices_with_control_parameters(Kbeta, Dbeta, xh)
+    
+                # Compute the objective function
+                max_amplitude,traj = passive_control.objective_function(targeted_frequency=targeted_frequency)
+    
+                loss = -max_amplitude
+                # Perform backpropagation
+                loss.backward()
+                if epoch == 0:
+                    first_grad_abs_K = Kbeta.grad.abs().item()
+                    first_grad_abs_xh = xh.grad.abs().item()
+    
+            # Clip all gradients to be within [-first_grad_abs, first_grad_abs]
+                with torch.no_grad():
+                    Kbeta.grad.clamp_(-first_grad_abs_K, first_grad_abs_K)
+                    xh.grad.clamp_(-first_grad_abs_xh, first_grad_abs_xh)
+                optimizer.step()
+                with torch.no_grad():
+                    Kbeta.clamp_(min=0.001, max=model.kalpha)
+                    xh.clamp_(min=model.xf, max=model.c)
+                print(f'Epoch {epoch+1}, Max amplitudes: {loss.item()}, Kbeta: {Kbeta.item()}, xh: {xh.item()}')
+                
+                data_save[j, 0, epoch] = Kbeta.detach().numpy()
+                data_save[j, 1, epoch] = xh.detach().numpy()
+                data_save[j, 2, epoch] = loss.item()
+            np.save('data_save.npy', data_save)
+        j+=1
+        #print(f"Gradients: Kbeta: {Kbeta.grad.item()}, xh: {xh.grad.item()}")
     
     
     
